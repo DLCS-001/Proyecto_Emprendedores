@@ -5,884 +5,1064 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Sistema de Pedidos - Restaurante</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/dragula@3.7.3/dist/dragula.min.css" rel="stylesheet">
-    <style id="app-style">
+
+    <style>
+        :root{
+            --bg: #f8fafc;
+            --panel: rgba(255,255,255,.82);
+            --panel-border: rgba(148,163,184,.22);
+            --shadow: 0 20px 60px rgba(15,23,42,.08);
+        }
+        html, body { height: 100%; }
         body {
-            font-family: 'Inter', system-ui, -apple-system, sans-serif;
-            background-color: #f7f9fc;
+            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(59,130,246,.12), transparent 28%),
+                radial-gradient(circle at top right, rgba(249,115,22,.12), transparent 26%),
+                linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+            color: #0f172a;
         }
-        
+        .glass {
+            background: var(--panel);
+            backdrop-filter: blur(18px);
+            -webkit-backdrop-filter: blur(18px);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--shadow);
+        }
         .role-card {
-            transition: all 0.3s ease;
+            transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+            border: 1px solid rgba(148,163,184,.25);
+            background: rgba(255,255,255,.78);
         }
-        
         .role-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-4px);
+            box-shadow: 0 18px 35px rgba(15,23,42,.12);
+            border-color: rgba(59,130,246,.3);
         }
-        
-        .card-order {
-            transition: all 0.2s;
+        .role-card.active {
+            outline: 2px solid rgba(59,130,246,.45);
+            box-shadow: 0 18px 40px rgba(59,130,246,.16);
         }
-        
-        .card-order:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        .board-column {
+            min-height: 24rem;
         }
-        
-        .column-orders {
-            min-height: 400px;
+        .order-card {
+            transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
         }
-        
-        @keyframes highlight {
-            0% { background-color: #fdba74; }
-            100% { background-color: white; }
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(15,23,42,.10);
         }
-        
-        .highlight {
-            animation: highlight 2s ease;
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            display: inline-block;
         }
-        
-        .notification {
+        .toast {
             position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            background: #10b981;
-            color: white;
-            border-radius: 5px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            display: flex;
-            align-items: center;
+            top: 1rem;
+            right: 1rem;
             z-index: 1000;
             transform: translateX(120%);
-            transition: transform 0.3s ease-out;
+            transition: transform .28s ease;
         }
-        
-        .notification.show {
-            transform: translateX(0);
+        .toast.show { transform: translateX(0); }
+        .toast-inner {
+            display: flex;
+            align-items: center;
+            gap: .6rem;
+            padding: .9rem 1rem;
+            border-radius: 1rem;
+            background: rgba(15,23,42,.96);
+            color: white;
+            box-shadow: 0 15px 30px rgba(15,23,42,.22);
         }
-        
-        /* Estilos para arrastrar elementos */
+        .hidden-soft { display: none !important; }
+        .dragula-placeholder {
+            background: rgba(59,130,246,.08);
+            border: 1px dashed rgba(59,130,246,.45);
+            border-radius: 1rem;
+        }
         .gu-mirror {
             position: fixed !important;
             margin: 0 !important;
             z-index: 9999 !important;
-            opacity: 0.8;
+            opacity: .85;
+            border-radius: 1rem;
+            transform: rotate(2deg);
         }
-        
-        .gu-hide {
-            display: none !important;
-        }
-        
+        .gu-hide { display: none !important; }
         .gu-unselectable {
             -webkit-user-select: none !important;
             -moz-user-select: none !important;
             -ms-user-select: none !important;
             user-select: none !important;
         }
-        
-        .gu-transit {
-            opacity: 0.2;
-            -webkit-transform: rotate(2deg);
-            transform: rotate(2deg);
-        }
-
-        @media (max-width: 768px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-        }
+        .gu-transit { opacity: .2; }
+        .scrollbar-thin::-webkit-scrollbar { width: 8px; height: 8px; }
+        .scrollbar-thin::-webkit-scrollbar-thumb { background: rgba(148,163,184,.55); border-radius: 999px; }
+        .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
     </style>
 </head>
+
 <body>
-    <!-- Login Screen -->
-    <div id="login-screen" class="min-h-screen flex items-center justify-center p-4">
-        <div class="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-            <h1 class="text-3xl font-bold text-center mb-8 text-gray-800">Sistema de Pedidos</h1>
-            <p class="text-center text-gray-600 mb-8">Seleccione su rol para continuar</p>
-            
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div class="role-card bg-blue-50 rounded-lg p-6 border border-blue-200 cursor-pointer text-center" data-role="mesero">
-                    <div class="text-blue-500 text-4xl mb-3">
-                        <i class="fas fa-concierge-bell"></i>
+    <!-- Login -->
+    <section id="login-screen" class="min-h-screen">
+        <div class="max-w-7xl mx-auto px-4 py-8 lg:py-12">
+            <div class="grid lg:grid-cols-2 gap-8 items-center min-h-[calc(100vh-4rem)]">
+                <div class="space-y-6">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200 text-slate-600 text-sm shadow-sm">
+                        <i class="fa-solid fa-bolt text-blue-500"></i>
+                        Prototipo de operaciones en tiempo real
                     </div>
-                    <h3 class="font-semibold text-blue-800">Mesero</h3>
+                    <div>
+                        <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900">
+                            Sistema de Pedidos
+                        </h1>
+                        <p class="mt-4 text-lg text-slate-600 max-w-xl">
+                            Una vista unificada para mesa, cocina y servicio, con flujo visual por estados, acciones rápidas y persistencia local.
+                        </p>
+                    </div>
+
+                    <div class="grid sm:grid-cols-3 gap-3 max-w-2xl">
+                        <div class="glass rounded-2xl p-4">
+                            <div class="text-blue-600 text-2xl mb-2"><i class="fa-solid fa-list-check"></i></div>
+                            <div class="font-semibold">Estados claros</div>
+                            <div class="text-sm text-slate-600">Pendiente, preparación, listo y entregado.</div>
+                        </div>
+                        <div class="glass rounded-2xl p-4">
+                            <div class="text-orange-500 text-2xl mb-2"><i class="fa-solid fa-mobile-screen-button"></i></div>
+                            <div class="font-semibold">Responsive</div>
+                            <div class="text-sm text-slate-600">Optimizado para sala, cocina y móvil.</div>
+                        </div>
+                        <div class="glass rounded-2xl p-4">
+                            <div class="text-emerald-600 text-2xl mb-2"><i class="fa-solid fa-floppy-disk"></i></div>
+                            <div class="font-semibold">LocalStorage</div>
+                            <div class="text-sm text-slate-600">Las órdenes se conservan entre recargas.</div>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="role-card bg-orange-50 rounded-lg p-6 border border-orange-200 cursor-pointer text-center" data-role="chef">
-                    <div class="text-orange-500 text-4xl mb-3">
-                        <i class="fas fa-utensils"></i>
+
+                <div class="glass rounded-3xl p-5 md:p-8">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <p class="text-sm uppercase tracking-[.2em] text-slate-500">Acceso rápido</p>
+                            <h2 class="text-2xl font-bold text-slate-900">Selecciona tu rol</h2>
+                        </div>
+                        <div class="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg">
+                            <i class="fa-solid fa-utensils"></i>
+                        </div>
                     </div>
-                    <h3 class="font-semibold text-orange-800">Chef/Cocina</h3>
-                </div>
-                
-                <div class="role-card bg-green-50 rounded-lg p-6 border border-green-200 cursor-pointer text-center" data-role="servicio">
-                    <div class="text-green-500 text-4xl mb-3">
-                        <i class="fas fa-cash-register"></i>
+
+                    <div class="grid gap-4">
+                        <button class="role-card text-left rounded-2xl p-5" data-role="mesero">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl">
+                                    <i class="fa-solid fa-bell-concierge"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <h3 class="text-lg font-semibold">Mesero</h3>
+                                        <span class="text-xs px-2.5 py-1 rounded-full bg-blue-100 text-blue-700">Crear / cancelar</span>
+                                    </div>
+                                    <p class="text-sm text-slate-600 mt-1">Registra órdenes y gestiona pendientes.</p>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button class="role-card text-left rounded-2xl p-5" data-role="chef">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-2xl">
+                                    <i class="fa-solid fa-kitchen-set"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <h3 class="text-lg font-semibold">Chef / Cocina</h3>
+                                        <span class="text-xs px-2.5 py-1 rounded-full bg-orange-100 text-orange-700">Arrastrar</span>
+                                    </div>
+                                    <p class="text-sm text-slate-600 mt-1">Mueve pedidos entre estados y acelera producción.</p>
+                                </div>
+                            </div>
+                        </button>
+
+                        <button class="role-card text-left rounded-2xl p-5" data-role="servicio">
+                            <div class="flex items-center gap-4">
+                                <div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl">
+                                    <i class="fa-solid fa-cash-register"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <h3 class="text-lg font-semibold">Servicio al cliente</h3>
+                                        <span class="text-xs px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700">Entrega</span>
+                                    </div>
+                                    <p class="text-sm text-slate-600 mt-1">Marca pedidos listos como entregados.</p>
+                                </div>
+                            </div>
+                        </button>
                     </div>
-                    <h3 class="font-semibold text-green-800">Servicio al Cliente</h3>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- Dashboard Screen (Initially Hidden) -->
-    <div id="dashboard-screen" class="hidden min-h-screen flex flex-col">
-        <!-- Header -->
-        <header class="bg-white shadow">
-            <div class="container mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between">
-                <div class="flex items-center justify-between">
-                    <div class="flex items-center">
-                        <i class="fas fa-utensils text-orange-500 mr-2"></i>
-                        <h1 class="text-xl font-bold text-gray-800">Sistema de Pedidos</h1>
+    </section>
+
+    <!-- Dashboard -->
+    <section id="dashboard-screen" class="hidden min-h-screen flex flex-col">
+        <header class="sticky top-0 z-40 border-b border-white/60 bg-white/70 backdrop-blur-xl">
+            <div class="max-w-7xl mx-auto px-4 py-4">
+                <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                    <div class="flex items-center justify-between gap-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-11 h-11 rounded-2xl bg-slate-900 text-white flex items-center justify-center shadow-lg">
+                                <i class="fa-solid fa-utensils"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-lg font-bold leading-tight">Sistema de Pedidos</h1>
+                                <p class="text-sm text-slate-500">Operación de restaurante</p>
+                            </div>
+                        </div>
+                        <button id="mobile-menu-button" class="lg:hidden w-10 h-10 rounded-xl bg-slate-100 text-slate-700">
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
                     </div>
-                    <button class="md:hidden text-gray-600 focus:outline-none" id="mobile-menu-button">
-                        <i class="fas fa-bars"></i>
-                    </button>
+
+                    <div id="toolbar" class="hidden lg:flex lg:items-center lg:justify-between gap-3 flex-1">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <span id="role-badge" class="px-3 py-1.5 rounded-full text-sm font-medium"></span>
+                            <div class="relative">
+                                <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                <input id="search-input" type="search" placeholder="Buscar por mesa, plato o ID"
+                                       class="w-72 max-w-[70vw] pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white/90 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button id="reload-history" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">
+                                <i class="fa-solid fa-rotate mr-2"></i>Recargar
+                            </button>
+                            <button id="logout-button" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium">
+                                <i class="fa-solid fa-right-from-bracket mr-2"></i>Salir
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="md:flex md:items-center mt-4 md:mt-0 hidden md:block" id="mobile-menu">
-                    <div class="flex items-center">
-                        <span id="role-badge" class="px-3 py-1 rounded-full text-sm font-medium mr-4"></span>
-                        <button id="reload-history" class="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md flex items-center">
-                            <i class="fas fa-sync-alt mr-2"></i>
-                            Recargar Historial
-                        </button>
-                        <button id="logout-button" class="ml-4 text-gray-600 hover:text-gray-800">
-                            <i class="fas fa-sign-out-alt mr-1"></i>
-                            Salir
-                        </button>
+
+                <div id="mobile-menu" class="hidden lg:hidden mt-4 glass rounded-2xl p-4">
+                    <div class="flex flex-col gap-3">
+                        <span id="role-badge-mobile" class="inline-flex w-fit px-3 py-1.5 rounded-full text-sm font-medium"></span>
+                        <input id="search-input-mobile" type="search" placeholder="Buscar por mesa, plato o ID"
+                               class="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white/90 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <div class="grid grid-cols-2 gap-2">
+                            <button id="reload-history-mobile" class="px-4 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium">
+                                <i class="fa-solid fa-rotate mr-2"></i>Recargar
+                            </button>
+                            <button id="logout-button-mobile" class="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-medium">
+                                <i class="fa-solid fa-right-from-bracket mr-2"></i>Salir
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </header>
-        
-        <!-- Main Content -->
-        <main class="flex-grow container mx-auto px-4 py-6">
-            <!-- Mesero Controls -->
-            <div id="mesero-controls" class="mb-6 hidden">
-                <button id="nueva-orden-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md flex items-center">
-                    <i class="fas fa-plus mr-2"></i>
-                    Nueva Orden
-                </button>
-            </div>
-            
-            <!-- Dashboard Grid -->
-            <div class="grid dashboard-grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Pendiente Column -->
-                <div class="column-container" id="pendiente-container">
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                        <div class="bg-yellow-100 px-4 py-3 border-b border-gray-200">
-                            <h2 class="font-semibold text-yellow-800">Pendiente</h2>
-                        </div>
-                        <div class="column-orders overflow-y-auto p-3" id="pendiente-column">
-                            <!-- Orders will be inserted here -->
-                        </div>
+
+        <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
+            <div class="flex flex-col gap-6">
+                <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div>
+                        <h2 class="text-2xl font-bold">Tablero operativo</h2>
+                        <p class="text-slate-600">Seguimiento por estado con acciones específicas según el rol.</p>
+                    </div>
+                    <div id="mesero-controls" class="hidden">
+                        <button id="nueva-orden-btn" class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg shadow-blue-600/20">
+                            <i class="fa-solid fa-plus"></i> Nueva orden
+                        </button>
                     </div>
                 </div>
-                
-                <!-- En Preparación Column -->
-                <div class="column-container" id="preparacion-container">
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                        <div class="bg-orange-100 px-4 py-3 border-b border-gray-200">
-                            <h2 class="font-semibold text-orange-800">En Preparación</h2>
+
+                <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4">
+                    <div class="glass rounded-2xl p-5">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-slate-500">Pendientes</p>
+                            <span class="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center"><i class="fa-solid fa-clock"></i></span>
                         </div>
-                        <div class="column-orders overflow-y-auto p-3" id="preparacion-column">
-                            <!-- Orders will be inserted here -->
+                        <p id="count-pendiente" class="mt-3 text-3xl font-extrabold">0</p>
+                    </div>
+                    <div class="glass rounded-2xl p-5">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-slate-500">En preparación</p>
+                            <span class="w-9 h-9 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center"><i class="fa-solid fa-fire"></i></span>
                         </div>
+                        <p id="count-preparacion" class="mt-3 text-3xl font-extrabold">0</p>
+                    </div>
+                    <div class="glass rounded-2xl p-5">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-slate-500">Listas</p>
+                            <span class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center"><i class="fa-solid fa-check"></i></span>
+                        </div>
+                        <p id="count-listo" class="mt-3 text-3xl font-extrabold">0</p>
+                    </div>
+                    <div class="glass rounded-2xl p-5">
+                        <div class="flex items-center justify-between">
+                            <p class="text-sm text-slate-500">Entregadas</p>
+                            <span class="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center"><i class="fa-solid fa-bell-concierge"></i></span>
+                        </div>
+                        <p id="count-entregado" class="mt-3 text-3xl font-extrabold">0</p>
                     </div>
                 </div>
-                
-                <!-- Listo Column -->
-                <div class="column-container" id="listo-container">
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                        <div class="bg-green-100 px-4 py-3 border-b border-gray-200">
-                            <h2 class="font-semibold text-green-800">Listo para Servir</h2>
+
+                <div class="grid gap-5 xl:grid-cols-4">
+                    <div class="glass rounded-3xl overflow-hidden">
+                        <div class="px-4 py-3 bg-amber-50 border-b border-amber-100 flex items-center justify-between">
+                            <div class="flex items-center gap-2 font-semibold text-amber-900"><span class="status-dot bg-amber-500"></span>Pendiente</div>
+                            <span id="badge-pendiente" class="text-xs px-2.5 py-1 rounded-full bg-white text-amber-700 border border-amber-200">0</span>
                         </div>
-                        <div class="column-orders overflow-y-auto p-3" id="listo-column">
-                            <!-- Orders will be inserted here -->
-                        </div>
+                        <div id="pendiente-column" class="board-column p-4 space-y-3 overflow-y-auto scrollbar-thin"></div>
                     </div>
-                </div>
-                
-                <!-- Entregado Column -->
-                <div class="column-container" id="entregado-container">
-                    <div class="bg-gray-50 border border-gray-200 rounded-lg overflow-hidden">
-                        <div class="bg-blue-100 px-4 py-3 border-b border-gray-200">
-                            <h2 class="font-semibold text-blue-800">Entregadas</h2>
+
+                    <div class="glass rounded-3xl overflow-hidden">
+                        <div class="px-4 py-3 bg-orange-50 border-b border-orange-100 flex items-center justify-between">
+                            <div class="flex items-center gap-2 font-semibold text-orange-900"><span class="status-dot bg-orange-500"></span>En preparación</div>
+                            <span id="badge-preparacion" class="text-xs px-2.5 py-1 rounded-full bg-white text-orange-700 border border-orange-200">0</span>
                         </div>
-                        <div class="column-orders overflow-y-auto p-3" id="entregado-column">
-                            <!-- Orders will be inserted here -->
+                        <div id="preparacion-column" class="board-column p-4 space-y-3 overflow-y-auto scrollbar-thin"></div>
+                    </div>
+
+                    <div class="glass rounded-3xl overflow-hidden">
+                        <div class="px-4 py-3 bg-emerald-50 border-b border-emerald-100 flex items-center justify-between">
+                            <div class="flex items-center gap-2 font-semibold text-emerald-900"><span class="status-dot bg-emerald-500"></span>Listo para servir</div>
+                            <span id="badge-listo" class="text-xs px-2.5 py-1 rounded-full bg-white text-emerald-700 border border-emerald-200">0</span>
                         </div>
+                        <div id="listo-column" class="board-column p-4 space-y-3 overflow-y-auto scrollbar-thin"></div>
+                    </div>
+
+                    <div id="entregado-container" class="glass rounded-3xl overflow-hidden">
+                        <div class="px-4 py-3 bg-sky-50 border-b border-sky-100 flex items-center justify-between">
+                            <div class="flex items-center gap-2 font-semibold text-sky-900"><span class="status-dot bg-sky-500"></span>Entregadas</div>
+                            <span id="badge-entregado" class="text-xs px-2.5 py-1 rounded-full bg-white text-sky-700 border border-sky-200">0</span>
+                        </div>
+                        <div id="entregado-column" class="board-column p-4 space-y-3 overflow-y-auto scrollbar-thin"></div>
                     </div>
                 </div>
             </div>
         </main>
-    </div>
-    
-    <!-- Nueva Orden Modal -->
-    <div id="nueva-orden-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-lg shadow-lg w-full max-w-lg max-h-[90vh] overflow-y-auto">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
-                <h3 class="text-xl font-medium text-gray-800">Nueva Orden</h3>
-                <button class="text-gray-500 hover:text-gray-700" id="cerrar-modal">
-                    <i class="fas fa-times"></i>
+    </section>
+
+    <!-- Modal -->
+    <div id="nueva-orden-modal" class="fixed inset-0 hidden items-center justify-center bg-slate-950/60 backdrop-blur-sm z-50 px-4">
+        <div class="glass w-full max-w-2xl rounded-3xl overflow-hidden max-h-[92vh] flex flex-col">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200/70">
+                <div>
+                    <h3 class="text-xl font-bold">Nueva orden</h3>
+                    <p class="text-sm text-slate-500">Registra mesa y platos de forma rápida.</p>
+                </div>
+                <button id="cerrar-modal" class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">
+                    <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
-            <form id="nueva-orden-form" class="p-6">
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-medium mb-2" for="mesa">
-                        Número de Mesa
-                    </label>
-                    <input type="number" id="mesa" name="mesa" min="1" class="form-input w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+
+            <form id="nueva-orden-form" class="p-6 overflow-y-auto scrollbar-thin">
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="mesa" class="block text-sm font-medium text-slate-700 mb-2">Número de mesa</label>
+                        <input id="mesa" name="mesa" type="number" min="1" required
+                               class="w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    </div>
+                    <div class="md:pt-8">
+                        <div class="rounded-2xl bg-slate-50 border border-slate-200 px-4 py-3 text-sm text-slate-600">
+                            Agrega uno o más platos. Cada fila admite cantidad y nombre.
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="mb-4">
-                    <label class="block text-gray-700 font-medium mb-2">
-                        Platos
-                    </label>
-                    
-                    <div id="platos-container">
-                        <div class="plato-item flex space-x-4 mb-3">
-                            <div class="flex-grow">
-                                <input type="text" placeholder="Nombre del plato" class="nombre-plato form-input w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            </div>
-                            <div class="w-24">
-                                <input type="number" placeholder="Cant." class="cantidad-plato form-input w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" value="1" required>
-                            </div>
-                            <button type="button" class="eliminar-plato text-red-500 hover:text-red-700 disabled:opacity-50">
-                                <i class="fas fa-trash"></i>
+
+                <div class="mt-5">
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="block text-sm font-medium text-slate-700">Platos</label>
+                        <button type="button" id="agregar-plato" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                            <i class="fa-solid fa-plus"></i> Agregar plato
+                        </button>
+                    </div>
+
+                    <div id="platos-container" class="space-y-3">
+                        <div class="plato-item grid grid-cols-1 md:grid-cols-[1fr_120px_auto] gap-3 items-start">
+                            <input type="text" placeholder="Nombre del plato" class="nombre-plato w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <input type="number" placeholder="Cant." min="1" value="1" class="cantidad-plato w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                            <button type="button" class="eliminar-plato w-12 h-12 rounded-2xl border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200">
+                                <i class="fa-solid fa-trash"></i>
                             </button>
                         </div>
                     </div>
-                    
-                    <button type="button" id="agregar-plato" class="mt-2 text-blue-600 hover:text-blue-800 text-sm flex items-center">
-                        <i class="fas fa-plus mr-1"></i>
-                        Agregar otro plato
-                    </button>
                 </div>
-                
-                <div class="flex justify-end space-x-3 mt-6">
-                    <button type="button" id="cancelar-orden" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300">
+
+                <div class="mt-6 flex flex-col-reverse sm:flex-row sm:justify-end gap-3">
+                    <button type="button" id="cancelar-orden" class="px-5 py-3 rounded-2xl bg-slate-100 hover:bg-slate-200 font-semibold text-slate-700">
                         Cancelar
                     </button>
-                    <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700">
-                        Crear Orden
+                    <button type="submit" class="px-5 py-3 rounded-2xl bg-blue-600 hover:bg-blue-700 font-semibold text-white shadow-lg shadow-blue-600/20">
+                        Crear orden
                     </button>
                 </div>
             </form>
         </div>
     </div>
-    
-    <!-- Notifications -->
-    <div id="notification" class="notification">
-        <i class="fas fa-check-circle mr-2"></i>
-        <span id="notification-text"></span>
+
+    <!-- Toast -->
+    <div id="notification" class="toast">
+        <div class="toast-inner">
+            <i class="fa-solid fa-circle-check text-emerald-400"></i>
+            <span id="notification-text">Listo</span>
+        </div>
     </div>
-    
-    <!-- Sonido Notificación -->
+
     <audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/933/933-preview.mp3" preload="auto"></audio>
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dragula@3.7.3/dist/dragula.min.js"></script>
-    <script id="app-script">
-        document.addEventListener('DOMContentLoaded', function() {
-            // Variables globales
-            let currentRole = '';
-            let orders = JSON.parse(localStorage.getItem('restaurantOrders')) || [];
-            
-            // DOM Elements
-            const loginScreen = document.getElementById('login-screen');
-            const dashboardScreen = document.getElementById('dashboard-screen');
-            const roleBadge = document.getElementById('role-badge');
-            const mobileMenuButton = document.getElementById('mobile-menu-button');
-            const mobileMenu = document.getElementById('mobile-menu');
-            const meseroControls = document.getElementById('mesero-controls');
-            const nuevaOrdenBtn = document.getElementById('nueva-orden-btn');
-            const nuevaOrdenModal = document.getElementById('nueva-orden-modal');
-            const cerrarModal = document.getElementById('cerrar-modal');
-            const nuevaOrdenForm = document.getElementById('nueva-orden-form');
-            const agregarPlatoBtn = document.getElementById('agregar-plato');
-            const cancelarOrdenBtn = document.getElementById('cancelar-orden');
-            const platosContainer = document.getElementById('platos-container');
-            const reloadHistory = document.getElementById('reload-history');
-            const logoutButton = document.getElementById('logout-button');
-            const notification = document.getElementById('notification');
-            const notificationText = document.getElementById('notification-text');
-            const notificationSound = document.getElementById('notification-sound');
-            
-            // Columnas
-            const pendienteColumn = document.getElementById('pendiente-column');
-            const preparacionColumn = document.getElementById('preparacion-column');
-            const listoColumn = document.getElementById('listo-column');
-            const entregadoColumn = document.getElementById('entregado-column');
-            const pendienteContainer = document.getElementById('pendiente-container');
-            const preparacionContainer = document.getElementById('preparacion-container');
-            const listoContainer = document.getElementById('listo-container');
-            const entregadoContainer = document.getElementById('entregado-container');
-            
-            // Selección de rol
-            document.querySelectorAll('.role-card').forEach(card => {
-                card.addEventListener('click', function() {
-                    currentRole = this.dataset.role;
-                    loginScreen.classList.add('hidden');
-                    dashboardScreen.classList.remove('hidden');
-                    
-                    configureByRole(currentRole);
-                    loadOrders();
-                });
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const STORAGE_KEY = 'restaurantOrders';
+        const STATE_ORDER = ['pendiente', 'preparacion', 'listo', 'entregado'];
+
+        let currentRole = '';
+        let orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+        let drake = null;
+
+        const loginScreen = document.getElementById('login-screen');
+        const dashboardScreen = document.getElementById('dashboard-screen');
+        const roleBadge = document.getElementById('role-badge');
+        const roleBadgeMobile = document.getElementById('role-badge-mobile');
+
+        const toolbar = document.getElementById('toolbar');
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        const meseroControls = document.getElementById('mesero-controls');
+        const nuevaOrdenBtn = document.getElementById('nueva-orden-btn');
+        const modal = document.getElementById('nueva-orden-modal');
+        const cerrarModal = document.getElementById('cerrar-modal');
+        const cancelarOrdenBtn = document.getElementById('cancelar-orden');
+        const nuevaOrdenForm = document.getElementById('nueva-orden-form');
+        const agregarPlatoBtn = document.getElementById('agregar-plato');
+        const platosContainer = document.getElementById('platos-container');
+
+        const searchInput = document.getElementById('search-input');
+        const searchInputMobile = document.getElementById('search-input-mobile');
+        const reloadHistory = document.getElementById('reload-history');
+        const reloadHistoryMobile = document.getElementById('reload-history-mobile');
+        const logoutButton = document.getElementById('logout-button');
+        const logoutButtonMobile = document.getElementById('logout-button-mobile');
+
+        const notification = document.getElementById('notification');
+        const notificationText = document.getElementById('notification-text');
+        const notificationSound = document.getElementById('notification-sound');
+
+        const entregadoContainer = document.getElementById('entregado-container');
+
+        const columns = {
+            pendiente: document.getElementById('pendiente-column'),
+            preparacion: document.getElementById('preparacion-column'),
+            listo: document.getElementById('listo-column'),
+            entregado: document.getElementById('entregado-column')
+        };
+
+        const badges = {
+            pendiente: document.getElementById('badge-pendiente'),
+            preparacion: document.getElementById('badge-preparacion'),
+            listo: document.getElementById('badge-listo'),
+            entregado: document.getElementById('badge-entregado')
+        };
+
+        const totals = {
+            pendiente: document.getElementById('count-pendiente'),
+            preparacion: document.getElementById('count-preparacion'),
+            listo: document.getElementById('count-listo'),
+            entregado: document.getElementById('count-entregado')
+        };
+
+        const stateMeta = {
+            pendiente: { label: 'Pendiente', cls: 'bg-amber-100 text-amber-800 border-amber-200', dot: 'bg-amber-500' },
+            preparacion: { label: 'En preparación', cls: 'bg-orange-100 text-orange-800 border-orange-200', dot: 'bg-orange-500' },
+            listo: { label: 'Listo', cls: 'bg-emerald-100 text-emerald-800 border-emerald-200', dot: 'bg-emerald-500' },
+            entregado: { label: 'Entregado', cls: 'bg-sky-100 text-sky-800 border-sky-200', dot: 'bg-sky-500' }
+        };
+
+        function roleLabel(role) {
+            return {
+                mesero: 'Mesero',
+                chef: 'Chef / Cocina',
+                servicio: 'Servicio al cliente'
+            }[role] || '';
+        }
+
+        function formatTime(iso) {
+            return new Date(iso).toLocaleTimeString('es-ES', {
+                hour: '2-digit',
+                minute: '2-digit'
             });
-            
-            // Configurar UI por rol
-            function configureByRole(role) {
-                if (role === 'mesero') {
-                    roleBadge.textContent = 'Mesero';
-                    roleBadge.classList.add('bg-blue-100', 'text-blue-800');
-                    meseroControls.classList.remove('hidden');
-                    entregadoContainer.classList.remove('hidden');
-                    
-                } else if (role === 'chef') {
-                    roleBadge.textContent = 'Chef/Cocina';
-                    roleBadge.classList.add('bg-orange-100', 'text-orange-800');
-                    meseroControls.classList.add('hidden');
-                    entregadoContainer.classList.add('hidden');
-                    
-                } else if (role === 'servicio') {
-                    roleBadge.textContent = 'Servicio al Cliente';
-                    roleBadge.classList.add('bg-green-100', 'text-green-800');
-                    meseroControls.classList.add('hidden');
-                    entregadoContainer.classList.remove('hidden');
+        }
+
+        function formatDateTime(iso) {
+            return new Date(iso).toLocaleString('es-ES', {
+                day: '2-digit',
+                month: 'short',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function showToast(message) {
+            notificationText.textContent = message;
+            notification.classList.add('show');
+            window.clearTimeout(showToast._timer);
+            showToast._timer = window.setTimeout(() => notification.classList.remove('show'), 2600);
+        }
+
+        function saveOrders() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(orders));
+        }
+
+        function loadSampleData() {
+            if (orders.length) return;
+            const now = Date.now();
+            orders = [
+                {
+                    id: 1,
+                    mesa: 3,
+                    platos: [
+                        { nombre: 'Hamburguesa especial', cantidad: 2 },
+                        { nombre: 'Papas fritas', cantidad: 1 }
+                    ],
+                    estado: 'pendiente',
+                    createdAt: new Date(now - 34 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 2,
+                    mesa: 5,
+                    platos: [
+                        { nombre: 'Pizza margarita', cantidad: 1 },
+                        { nombre: 'Ensalada César', cantidad: 1 },
+                        { nombre: 'Refresco', cantidad: 2 }
+                    ],
+                    estado: 'preparacion',
+                    createdAt: new Date(now - 26 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 3,
+                    mesa: 2,
+                    platos: [
+                        { nombre: 'Pasta carbonara', cantidad: 1 },
+                        { nombre: 'Tiramisú', cantidad: 1 }
+                    ],
+                    estado: 'listo',
+                    createdAt: new Date(now - 17 * 60 * 1000).toISOString()
+                },
+                {
+                    id: 4,
+                    mesa: 1,
+                    platos: [
+                        { nombre: 'Sopa de tomate', cantidad: 1 },
+                        { nombre: 'Pollo asado', cantidad: 1 },
+                        { nombre: 'Agua mineral', cantidad: 1 }
+                    ],
+                    estado: 'entregado',
+                    createdAt: new Date(now - 9 * 60 * 1000).toISOString()
                 }
+            ];
+            saveOrders();
+        }
+
+        function resetRoleBadgeStyles() {
+            roleBadge.className = 'px-3 py-1.5 rounded-full text-sm font-medium';
+            roleBadgeMobile.className = 'inline-flex w-fit px-3 py-1.5 rounded-full text-sm font-medium';
+        }
+
+        function applyRoleUi(role) {
+            resetRoleBadgeStyles();
+
+            const roleText = roleLabel(role);
+            roleBadge.textContent = roleText;
+            roleBadgeMobile.textContent = roleText;
+
+            if (role === 'mesero') {
+                roleBadge.classList.add('bg-blue-100', 'text-blue-800');
+                roleBadgeMobile.classList.add('bg-blue-100', 'text-blue-800');
+                meseroControls.classList.remove('hidden');
+                entregadoContainer.classList.remove('hidden');
+            } else if (role === 'chef') {
+                roleBadge.classList.add('bg-orange-100', 'text-orange-800');
+                roleBadgeMobile.classList.add('bg-orange-100', 'text-orange-800');
+                meseroControls.classList.add('hidden');
+                entregadoContainer.classList.add('hidden');
+            } else if (role === 'servicio') {
+                roleBadge.classList.add('bg-emerald-100', 'text-emerald-800');
+                roleBadgeMobile.classList.add('bg-emerald-100', 'text-emerald-800');
+                meseroControls.classList.add('hidden');
+                entregadoContainer.classList.remove('hidden');
             }
-            
-            // Cargar órdenes desde LocalStorage
-            function loadOrders() {
-                clearColumns();
-                
-                orders.forEach(order => {
-                    const orderCard = createOrderCard(order);
-                    
-                    // Colocar en la columna correspondiente
-                    switch (order.estado) {
-                        case 'pendiente':
-                            pendienteColumn.appendChild(orderCard);
-                            break;
-                        case 'preparacion':
-                            preparacionColumn.appendChild(orderCard);
-                            break;
-                        case 'listo':
-                            listoColumn.appendChild(orderCard);
-                            break;
-                        case 'entregado':
-                            if (currentRole !== 'chef') {
-                                entregadoColumn.appendChild(orderCard);
-                            }
-                            break;
-                    }
-                });
+        }
+
+        function visibleStates() {
+            if (currentRole === 'chef') return ['pendiente', 'preparacion', 'listo'];
+            if (currentRole === 'servicio') return ['listo', 'entregado'];
+            return STATE_ORDER;
+        }
+
+        function cardAllowsAction(order) {
+            if (currentRole === 'mesero') return order.estado === 'pendiente';
+            if (currentRole === 'chef') return order.estado === 'pendiente' || order.estado === 'preparacion';
+            if (currentRole === 'servicio') return order.estado === 'listo';
+            return false;
+        }
+
+        function matchesSearch(order, query) {
+            if (!query) return true;
+            const haystack = [
+                `orden ${order.id}`,
+                `mesa ${order.mesa}`,
+                order.estado,
+                ...order.platos.map(p => `${p.nombre} x${p.cantidad}`)
+            ].join(' ').toLowerCase();
+            return haystack.includes(query);
+        }
+
+        function filteredOrders() {
+            const q = (searchInput?.value || searchInputMobile?.value || '').trim().toLowerCase();
+            return orders.filter(order => matchesSearch(order, q));
+        }
+
+        function updateStats(list) {
+            const counts = { pendiente: 0, preparacion: 0, listo: 0, entregado: 0 };
+            list.forEach(order => {
+                if (counts[order.estado] !== undefined) counts[order.estado]++;
+            });
+
+            for (const key of STATE_ORDER) {
+                totals[key].textContent = counts[key];
+                badges[key].textContent = counts[key];
             }
-            
-            function clearColumns() {
-                pendienteColumn.innerHTML = '';
-                preparacionColumn.innerHTML = '';
-                listoColumn.innerHTML = '';
-                entregadoColumn.innerHTML = '';
+        }
+
+        function emptyState(label) {
+            return `
+                <div class="rounded-2xl border border-dashed border-slate-200 bg-white/70 px-4 py-8 text-center text-slate-500">
+                    <div class="w-12 h-12 mx-auto mb-3 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
+                        <i class="fa-regular fa-folder-open"></i>
+                    </div>
+                    <div class="font-medium">${label}</div>
+                </div>
+            `;
+        }
+
+        function renderOrderCard(order) {
+            const meta = stateMeta[order.estado];
+            const canAct = cardAllowsAction(order);
+
+            const dishes = order.platos.map(plato => `
+                <li class="flex items-start justify-between gap-3">
+                    <span class="text-slate-700">${plato.nombre}</span>
+                    <span class="text-slate-500 font-medium">x${plato.cantidad}</span>
+                </li>
+            `).join('');
+
+            const buttons = [];
+            if (currentRole === 'mesero' && order.estado === 'pendiente') {
+                buttons.push(`<button data-action="cancelar" data-order-id="${order.id}" class="w-full px-3 py-2 rounded-xl border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 font-semibold">
+                    <i class="fa-solid fa-xmark mr-2"></i>Cancelar
+                </button>`);
             }
-            
-            // Crear tarjeta de orden
-            function createOrderCard(order) {
-                const card = document.createElement('div');
-                card.className = 'card-order bg-white p-4 mb-3 rounded-lg shadow border border-gray-200';
-                card.dataset.orderId = order.id;
-                
-                let stateClass = '';
-                if (order.estado === 'pendiente') stateClass = 'text-yellow-500';
-                if (order.estado === 'preparacion') stateClass = 'text-orange-500';
-                if (order.estado === 'listo') stateClass = 'text-green-500';
-                if (order.estado === 'entregado') stateClass = 'text-blue-500';
-                
-                // Formatear fecha
-                const fecha = new Date(order.createdAt);
-                const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                
-                // Construir HTML para la lista de platos
-                let platosHTML = '<ul class="mt-2 space-y-1">';
-                order.platos.forEach(plato => {
-                    platosHTML += `<li class="flex justify-between">
-                        <span>${plato.nombre}</span>
-                        <span class="text-gray-600">x${plato.cantidad}</span>
-                    </li>`;
-                });
-                platosHTML += '</ul>';
-                
-                // Botones según estado y rol
-                let botonesHTML = '';
-                
-                if (currentRole === 'mesero' && order.estado === 'pendiente') {
-                    botonesHTML = `<button class="cancelar-orden text-red-500 hover:text-red-700 text-sm mt-3">
-                        <i class="fas fa-times mr-1"></i> Cancelar orden
-                    </button>`;
-                } else if (currentRole === 'chef') {
-                    if (order.estado === 'pendiente') {
-                        botonesHTML = `<button class="preparar-orden w-full bg-orange-500 hover:bg-orange-600 text-white py-1 px-3 rounded text-sm mt-3">
-                            <i class="fas fa-fire mr-1"></i> Comenzar preparación
-                        </button>`;
-                    } else if (order.estado === 'preparacion') {
-                        botonesHTML = `<button class="finalizar-orden w-full bg-green-500 hover:bg-green-600 text-white py-1 px-3 rounded text-sm mt-3">
-                            <i class="fas fa-check mr-1"></i> Marcar como listo
-                        </button>`;
-                    }
-                } else if (currentRole === 'servicio' && order.estado === 'listo') {
-                    botonesHTML = `<button class="entregar-orden w-full bg-blue-500 hover:bg-blue-600 text-white py-1 px-3 rounded text-sm mt-3">
-                        <i class="fas fa-check-circle mr-1"></i> Marcar como entregada
-                    </button>`;
-                }
-                
-                card.innerHTML = `
-                    <div class="flex justify-between items-start">
+            if (currentRole === 'chef' && order.estado === 'pendiente') {
+                buttons.push(`<button data-action="preparar" data-order-id="${order.id}" class="w-full px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white font-semibold">
+                    <i class="fa-solid fa-fire mr-2"></i>Comenzar preparación
+                </button>`);
+            }
+            if (currentRole === 'chef' && order.estado === 'preparacion') {
+                buttons.push(`<button data-action="listo" data-order-id="${order.id}" class="w-full px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+                    <i class="fa-solid fa-check mr-2"></i>Marcar como listo
+                </button>`);
+            }
+            if (currentRole === 'servicio' && order.estado === 'listo') {
+                buttons.push(`<button data-action="entregar" data-order-id="${order.id}" class="w-full px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-700 text-white font-semibold">
+                    <i class="fa-solid fa-bell-concierge mr-2"></i>Marcar como entregada
+                </button>`);
+            }
+
+            return `
+                <article class="order-card bg-white rounded-2xl border border-slate-200 p-4 shadow-sm ${canAct ? 'cursor-grab' : ''}" data-order-id="${order.id}">
+                    <div class="flex items-start justify-between gap-3">
                         <div>
-                            <span class="font-medium">Orden #${order.id}</span>
-                            <span class="ml-2 text-sm text-gray-500">Mesa ${order.mesa}</span>
+                            <div class="flex items-center gap-2">
+                                <h3 class="font-bold text-slate-900">Orden #${order.id}</h3>
+                                <span class="text-sm text-slate-500">Mesa ${order.mesa}</span>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1"><i class="fa-regular fa-clock mr-1"></i>${formatDateTime(order.createdAt)}</p>
                         </div>
-                        <span class="text-sm ${stateClass}">
-                            <i class="fas fa-circle text-xs mr-1"></i>
-                            ${order.estado.charAt(0).toUpperCase() + order.estado.slice(1)}
+                        <span class="inline-flex items-center gap-2 text-xs font-semibold px-2.5 py-1 rounded-full border ${meta.cls}">
+                            <span class="status-dot ${meta.dot}"></span>${meta.label}
                         </span>
                     </div>
-                    <div class="border-t border-gray-100 my-2"></div>
-                    ${platosHTML}
-                    <div class="text-xs text-gray-500 mt-2">
-                        <i class="far fa-clock mr-1"></i>
-                        ${hora}
+
+                    <div class="my-3 border-t border-slate-100"></div>
+
+                    <ul class="space-y-2 text-sm">
+                        ${dishes}
+                    </ul>
+
+                    <div class="mt-4 flex flex-col gap-2">
+                        ${buttons.join('')}
                     </div>
-                    ${botonesHTML}
-                `;
-                
-                // Event listeners para botones de la tarjeta
-                setTimeout(() => {
-                    const cardElement = document.querySelector(`[data-order-id="${order.id}"]`);
-                    
-                    if (cardElement) {
-                        // Botón de cancelar orden
-                        const cancelarBtn = cardElement.querySelector('.cancelar-orden');
-                        if (cancelarBtn) {
-                            cancelarBtn.addEventListener('click', () => cancelarOrden(order.id));
-                        }
-                        
-                        // Botón de comenzar preparación
-                        const prepararBtn = cardElement.querySelector('.preparar-orden');
-                        if (prepararBtn) {
-                            prepararBtn.addEventListener('click', () => cambiarEstadoOrden(order.id, 'preparacion'));
-                        }
-                        
-                        // Botón de finalizar preparación
-                        const finalizarBtn = cardElement.querySelector('.finalizar-orden');
-                        if (finalizarBtn) {
-                            finalizarBtn.addEventListener('click', () => cambiarEstadoOrden(order.id, 'listo'));
-                        }
-                        
-                        // Botón de entregar orden
-                        const entregarBtn = cardElement.querySelector('.entregar-orden');
-                        if (entregarBtn) {
-                            entregarBtn.addEventListener('click', () => cambiarEstadoOrden(order.id, 'entregado'));
-                        }
-                    }
-                }, 0);
-                
-                return card;
+                </article>
+            `;
+        }
+
+        function renderColumns() {
+            const list = filteredOrders();
+            updateStats(list);
+
+            const visible = visibleStates();
+
+            for (const state of STATE_ORDER) {
+                const filtered = list.filter(order => order.estado === state && visible.includes(state));
+                const html = filtered.length ? filtered.map(renderOrderCard).join('') : emptyState('Sin órdenes');
+                columns[state].innerHTML = html;
             }
-            
-            // Nueva Orden Modal
-            nuevaOrdenBtn.addEventListener('click', function() {
-                nuevaOrdenModal.classList.remove('hidden');
+
+            if (currentRole === 'chef') initDragAndDrop();
+            else destroyDragAndDrop();
+        }
+
+        function loadOrders() {
+            renderColumns();
+        }
+
+        function destroyDragAndDrop() {
+            if (drake) {
+                drake.destroy();
+                drake = null;
+            }
+        }
+
+        function initDragAndDrop() {
+            destroyDragAndDrop();
+
+            drake = dragula([
+                columns.pendiente,
+                columns.preparacion,
+                columns.listo
+            ], {
+                moves: (el, container, handle) => !!el && el.classList.contains('order-card'),
+                accepts: (el, target, source) => target !== columns.entregado
             });
-            
-            cerrarModal.addEventListener('click', function() {
-                nuevaOrdenModal.classList.add('hidden');
+
+            drake.on('drop', (el, target) => {
+                if (!el || !target) return;
+                const orderId = Number(el.dataset.orderId);
+
+                let nuevoEstado = null;
+                if (target === columns.pendiente) nuevoEstado = 'pendiente';
+                if (target === columns.preparacion) nuevoEstado = 'preparacion';
+                if (target === columns.listo) nuevoEstado = 'listo';
+
+                if (nuevoEstado) cambiarEstadoOrden(orderId, nuevoEstado, true);
             });
-            
-            cancelarOrdenBtn.addEventListener('click', function() {
-                nuevaOrdenModal.classList.add('hidden');
-            });
-            
-            // Agregar un plato a la orden
-            agregarPlatoBtn.addEventListener('click', function() {
-                const platoItem = document.createElement('div');
-                platoItem.className = 'plato-item flex space-x-4 mb-3';
-                
-                platoItem.innerHTML = `
-                    <div class="flex-grow">
-                        <input type="text" placeholder="Nombre del plato" class="nombre-plato form-input w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                    </div>
-                    <div class="w-24">
-                        <input type="number" placeholder="Cant." class="cantidad-plato form-input w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" value="1" required>
-                    </div>
-                    <button type="button" class="eliminar-plato text-red-500 hover:text-red-700">
-                        <i class="fas fa-trash"></i>
+        }
+
+        function openModal() {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            setTimeout(() => document.getElementById('mesa').focus(), 50);
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function resetPlatos() {
+            platosContainer.innerHTML = `
+                <div class="plato-item grid grid-cols-1 md:grid-cols-[1fr_120px_auto] gap-3 items-start">
+                    <input type="text" placeholder="Nombre del plato" class="nombre-plato w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <input type="number" placeholder="Cant." min="1" value="1" class="cantidad-plato w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                    <button type="button" class="eliminar-plato w-12 h-12 rounded-2xl border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200">
+                        <i class="fa-solid fa-trash"></i>
                     </button>
-                `;
-                
-                platosContainer.appendChild(platoItem);
-                
-                // Evento para eliminar plato
-                platoItem.querySelector('.eliminar-plato').addEventListener('click', function() {
-                    platoItem.remove();
-                    
-                    // Deshabilitar el botón de eliminar si solo queda un plato
-                    if (document.querySelectorAll('.plato-item').length === 1) {
-                        document.querySelector('.eliminar-plato').disabled = true;
-                    }
-                });
-                
-                // Habilitar todos los botones de eliminar si hay más de un plato
-                if (document.querySelectorAll('.plato-item').length > 1) {
-                    document.querySelectorAll('.eliminar-plato').forEach(btn => {
-                        btn.disabled = false;
-                    });
-                }
+                </div>
+            `;
+            updateDeleteButtons();
+            bindPlatoDelete();
+        }
+
+        function updateDeleteButtons() {
+            const items = [...document.querySelectorAll('.plato-item')];
+            const buttons = [...document.querySelectorAll('.eliminar-plato')];
+            buttons.forEach(btn => btn.disabled = items.length === 1);
+        }
+
+        function bindPlatoDelete() {
+            document.querySelectorAll('.eliminar-plato').forEach(btn => {
+                btn.onclick = function() {
+                    const item = this.closest('.plato-item');
+                    if (item) item.remove();
+                    updateDeleteButtons();
+                };
             });
-            
-            // Deshabilitar el botón de eliminar inicial si solo hay un plato
-            document.querySelector('.eliminar-plato').disabled = true;
-            
-            // Crear nueva orden
-            nuevaOrdenForm.addEventListener('submit', function(e) {
+        }
+
+        function addPlatoRow() {
+            const row = document.createElement('div');
+            row.className = 'plato-item grid grid-cols-1 md:grid-cols-[1fr_120px_auto] gap-3 items-start';
+            row.innerHTML = `
+                <input type="text" placeholder="Nombre del plato" class="nombre-plato w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <input type="number" placeholder="Cant." min="1" value="1" class="cantidad-plato w-full px-4 py-3 rounded-2xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                <button type="button" class="eliminar-plato w-12 h-12 rounded-2xl border border-slate-200 text-slate-400 hover:text-rose-600 hover:border-rose-200">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            `;
+            platosContainer.appendChild(row);
+            bindPlatoDelete();
+            updateDeleteButtons();
+        }
+
+        function setSearchValue(value) {
+            if (searchInput) searchInput.value = value;
+            if (searchInputMobile) searchInputMobile.value = value;
+            loadOrders();
+        }
+
+        function nextId() {
+            return orders.length ? Math.max(...orders.map(o => o.id)) + 1 : 1;
+        }
+
+        function validateDishes() {
+            const rows = [...document.querySelectorAll('.plato-item')];
+            const dishes = [];
+
+            for (const row of rows) {
+                const nombre = row.querySelector('.nombre-plato').value.trim();
+                const cantidad = Number(row.querySelector('.cantidad-plato').value);
+
+                if (!nombre) continue;
+                if (!Number.isInteger(cantidad) || cantidad < 1) continue;
+
+                dishes.push({ nombre, cantidad });
+            }
+
+            return dishes;
+        }
+
+        function cambiarEstadoOrden(orderId, nuevoEstado, silent = false) {
+            const idx = orders.findIndex(order => order.id === orderId);
+            if (idx === -1) return;
+
+            const before = orders[idx].estado;
+            orders[idx].estado = nuevoEstado;
+            saveOrders();
+
+            if (nuevoEstado === 'listo' && before !== 'listo') {
+                try { notificationSound.currentTime = 0; notificationSound.play(); } catch (_) {}
+            }
+
+            renderColumns();
+            if (!silent) {
+                showToast(`Orden #${orderId} → ${stateMeta[nuevoEstado].label}`);
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Estado actualizado',
+                    text: `La orden #${orderId} pasó a "${stateMeta[nuevoEstado].label}".`,
+                    timer: 1600,
+                    showConfirmButton: false
+                });
+            }
+        }
+
+        function cancelarOrden(orderId) {
+            Swal.fire({
+                title: '¿Cancelar orden?',
+                text: `Se eliminará la orden #${orderId}.`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, cancelar',
+                cancelButtonText: 'No'
+            }).then(result => {
+                if (!result.isConfirmed) return;
+
+                orders = orders.filter(order => order.id !== orderId);
+                saveOrders();
+                renderColumns();
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Orden cancelada',
+                    timer: 1400,
+                    showConfirmButton: false
+                });
+                showToast(`Orden #${orderId} cancelada`);
+            });
+        }
+
+        function createOrder() {
+            const mesa = Number(document.getElementById('mesa').value);
+            const platos = validateDishes();
+
+            if (!Number.isInteger(mesa) || mesa < 1) {
+                Swal.fire({ icon: 'error', title: 'Mesa inválida', text: 'Ingresa un número de mesa válido.' });
+                return;
+            }
+            if (!platos.length) {
+                Swal.fire({ icon: 'error', title: 'Faltan platos', text: 'Agrega al menos un plato válido.' });
+                return;
+            }
+
+            const newOrder = {
+                id: nextId(),
+                mesa,
+                platos,
+                estado: 'pendiente',
+                createdAt: new Date().toISOString()
+            };
+
+            orders.unshift(newOrder);
+            saveOrders();
+            closeModal();
+            nuevaOrdenForm.reset();
+            resetPlatos();
+            renderColumns();
+
+            Swal.fire({
+                icon: 'success',
+                title: '¡Orden creada!',
+                text: `Orden #${newOrder.id} registrada correctamente.`,
+                timer: 1600,
+                showConfirmButton: false
+            });
+            showToast(`Nueva orden #${newOrder.id}`);
+        }
+
+        function attachActionHandlers() {
+            document.addEventListener('click', (event) => {
+                const btn = event.target.closest('[data-action][data-order-id]');
+                if (!btn) return;
+
+                const orderId = Number(btn.dataset.orderId);
+                const action = btn.dataset.action;
+
+                if (action === 'cancelar') cancelarOrden(orderId);
+                if (action === 'preparar') cambiarEstadoOrden(orderId, 'preparacion');
+                if (action === 'listo') cambiarEstadoOrden(orderId, 'listo');
+                if (action === 'entregar') cambiarEstadoOrden(orderId, 'entregado');
+            });
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.role-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    currentRole = card.dataset.role;
+                    document.querySelectorAll('.role-card').forEach(el => el.classList.remove('active'));
+                    card.classList.add('active');
+
+                    loginScreen.classList.add('hidden');
+                    dashboardScreen.classList.remove('hidden');
+                    applyRoleUi(currentRole);
+                    loadOrders();
+                });
+            });
+
+            mobileMenuButton?.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            const openModalHandlers = [nuevaOrdenBtn];
+            openModalHandlers.forEach(btn => btn?.addEventListener('click', openModal));
+
+            cerrarModal.addEventListener('click', closeModal);
+            cancelarOrdenBtn.addEventListener('click', closeModal);
+
+            modal.addEventListener('click', e => {
+                if (e.target === modal) closeModal();
+            });
+
+            agregarPlatoBtn.addEventListener('click', addPlatoRow);
+
+            nuevaOrdenForm.addEventListener('submit', e => {
                 e.preventDefault();
-                
-                // Mostrar indicador de carga
                 Swal.fire({
                     title: 'Creando orden...',
-                    text: 'Por favor espere',
                     allowOutsideClick: false,
-                    showConfirmButton: false,
-                    willOpen: () => {
-                        Swal.showLoading();
-                    }
+                    didOpen: () => Swal.showLoading()
                 });
-                
-                // Crear array de platos
-                const platos = [];
-                const platosItems = document.querySelectorAll('.plato-item');
-                
-                platosItems.forEach(item => {
-                    const nombre = item.querySelector('.nombre-plato').value;
-                    const cantidad = parseInt(item.querySelector('.cantidad-plato').value);
-                    
-                    if (nombre && cantidad) {
-                        platos.push({
-                            nombre: nombre,
-                            cantidad: cantidad
-                        });
-                    }
-                });
-                
-                // Crear objeto de orden
-                const newOrder = {
-                    id: orders.length > 0 ? Math.max(...orders.map(order => order.id)) + 1 : 1,
-                    mesa: parseInt(document.getElementById('mesa').value),
-                    platos: platos,
-                    estado: 'pendiente',
-                    createdAt: new Date().toISOString()
-                };
-                
-                // Agregar a la lista y guardar
-                orders.push(newOrder);
-                saveOrders();
-                
-                // Simular tiempo de carga y mostrar mensaje de éxito
-                setTimeout(() => {
-                    nuevaOrdenModal.classList.add('hidden');
-                    nuevaOrdenForm.reset();
-                    
-                    // Resetear platos
-                    platosContainer.innerHTML = `
-                        <div class="plato-item flex space-x-4 mb-3">
-                            <div class="flex-grow">
-                                <input type="text" placeholder="Nombre del plato" class="nombre-plato form-input w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" required>
-                            </div>
-                            <div class="w-24">
-                                <input type="number" placeholder="Cant." class="cantidad-plato form-input w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" min="1" value="1" required>
-                            </div>
-                            <button type="button" class="eliminar-plato text-red-500 hover:text-red-700 disabled:opacity-50">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    `;
-                    document.querySelector('.eliminar-plato').disabled = true;
-                    
-                    // Cargar las órdenes actualizadas
-                    loadOrders();
-                    
-                    // Mostrar mensaje de éxito
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Orden creada!',
-                        text: `Orden #${newOrder.id} creada exitosamente`,
-                        timer: 2000,
-                        showConfirmButton: false
-                    });
-                    
-                    // Mostrar notificación
-                    showNotification(`¡Nueva orden #${newOrder.id} creada!`);
-                }, 1000);
+                window.setTimeout(() => {
+                    Swal.close();
+                    createOrder();
+                }, 500);
             });
-            
-            // Cambiar estado de una orden
-            function cambiarEstadoOrden(orderId, nuevoEstado) {
-                // Mostrar indicador de carga
-                Swal.fire({
-                    title: 'Actualizando orden...',
-                    text: 'Por favor espere',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    willOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                // Buscar la orden
-                const orderIndex = orders.findIndex(order => order.id === orderId);
-                
-                if (orderIndex !== -1) {
-                    orders[orderIndex].estado = nuevoEstado;
-                    
-                    // Guardar órdenes actualizadas
-                    saveOrders();
-                    
-                    // Simular tiempo de carga
-                    setTimeout(() => {
-                        // Cargar las órdenes actualizadas
-                        loadOrders();
-                        
-                        Swal.fire({
-                            icon: 'success',
-                            title: '¡Estado actualizado!',
-                            text: `Orden #${orderId} actualizada a "${nuevoEstado}"`,
-                            timer: 2000,
-                            showConfirmButton: false
-                        });
-                        
-                        // Si es orden lista para servir, tocar notificación
-                        if (nuevoEstado === 'listo') {
-                            notificationSound.play();
-                        }
-                        
-                        // Mostrar notificación
-                        showNotification(`Orden #${orderId} actualizada a "${nuevoEstado}"`);
-                    }, 1000);
-                }
-            }
-            
-            // Cancelar una orden
-            function cancelarOrden(orderId) {
-                Swal.fire({
-                    title: '¿Estás seguro?',
-                    text: "¿Deseas cancelar esta orden?",
-                    icon: 'warning',
-                    showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
-                    confirmButtonText: 'Sí, cancelar',
-                    cancelButtonText: 'No'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        // Mostrar indicador de carga
-                        Swal.fire({
-                            title: 'Cancelando orden...',
-                            text: 'Por favor espere',
-                            allowOutsideClick: false,
-                            showConfirmButton: false,
-                            willOpen: () => {
-                                Swal.showLoading();
-                            }
-                        });
-                        
-                        // Buscar y eliminar la orden
-                        const orderIndex = orders.findIndex(order => order.id === orderId);
-                        
-                        if (orderIndex !== -1) {
-                            orders.splice(orderIndex, 1);
-                            
-                            // Guardar órdenes actualizadas
-                            saveOrders();
-                            
-                            // Simular tiempo de carga
-                            setTimeout(() => {
-                                // Cargar las órdenes actualizadas
-                                loadOrders();
-                                
-                                Swal.fire({
-                                    icon: 'success',
-                                    title: '¡Orden cancelada!',
-                                    text: `La orden #${orderId} ha sido cancelada`,
-                                    timer: 2000,
-                                    showConfirmButton: false
-                                });
-                                
-                                // Mostrar notificación
-                                showNotification(`Orden #${orderId} cancelada`);
-                            }, 1000);
-                        }
-                    }
-                });
-            }
-            
-            // Guardar órdenes en LocalStorage
-            function saveOrders() {
-                localStorage.setItem('restaurantOrders', JSON.stringify(orders));
-            }
-            
-            // Recargar historial
-            reloadHistory.addEventListener('click', function() {
-                Swal.fire({
-                    title: 'Recargando historial...',
-                    text: 'Por favor espere',
-                    allowOutsideClick: false,
-                    showConfirmButton: false,
-                    willOpen: () => {
-                        Swal.showLoading();
-                    }
-                });
-                
-                // Simular tiempo de carga
-                setTimeout(() => {
-                    orders = JSON.parse(localStorage.getItem('restaurantOrders')) || [];
+
+            [searchInput, searchInputMobile].forEach(input => {
+                input?.addEventListener('input', e => {
+                    const value = e.target.value;
+                    if (input === searchInput) searchInputMobile.value = value;
+                    if (input === searchInputMobile) searchInput.value = value;
                     loadOrders();
-                    
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Historial recargado!',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                }, 1000);
+                });
             });
-            
-            // Cerrar sesión
-            logoutButton.addEventListener('click', function() {
+
+            const reload = () => {
+                Swal.fire({
+                    title: 'Recargando...',
+                    allowOutsideClick: false,
+                    didOpen: () => Swal.showLoading()
+                });
+                window.setTimeout(() => {
+                    orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+                    Swal.close();
+                    loadOrders();
+                    showToast('Historial recargado');
+                }, 450);
+            };
+
+            reloadHistory.addEventListener('click', reload);
+            reloadHistoryMobile.addEventListener('click', reload);
+
+            const logout = () => {
                 Swal.fire({
                     title: '¿Cerrar sesión?',
-                    text: "¿Deseas salir del sistema?",
+                    text: 'Volverás a la pantalla de acceso.',
                     icon: 'question',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
                     confirmButtonText: 'Sí, salir',
-                    cancelButtonText: 'No'
-                }).then((result) => {
-                    if (result.isConfirmed) {
-                        dashboardScreen.classList.add('hidden');
-                        loginScreen.classList.remove('hidden');
-                        currentRole = '';
-                    }
-                });
-            });
-            
-            // Menú móvil
-            mobileMenuButton.addEventListener('click', function() {
-                if (mobileMenu.classList.contains('hidden')) {
-                    mobileMenu.classList.remove('hidden');
-                } else {
+                    cancelButtonText: 'Cancelar'
+                }).then(result => {
+                    if (!result.isConfirmed) return;
+                    currentRole = '';
+                    dashboardScreen.classList.add('hidden');
+                    loginScreen.classList.remove('hidden');
                     mobileMenu.classList.add('hidden');
-                }
+                    searchInput.value = '';
+                    searchInputMobile.value = '';
+                    document.querySelectorAll('.role-card').forEach(el => el.classList.remove('active'));
+                    destroyDragAndDrop();
+                });
+            };
+
+            logoutButton.addEventListener('click', logout);
+            logoutButtonMobile.addEventListener('click', logout);
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') closeModal();
             });
-            
-            // Función para mostrar notificaciones
-            function showNotification(message) {
-                notificationText.textContent = message;
-                notification.classList.add('show');
-                
-                setTimeout(() => {
-                    notification.classList.remove('show');
-                }, 3000);
-            }
-            
-            // Inicializar Drag and Drop para el chef
-            function initDragula() {
-                if (currentRole === 'chef') {
-                    dragula([
-                        pendienteColumn,
-                        preparacionColumn,
-                        listoColumn
-                    ]).on('drop', function(el, target, source) {
-                        const orderId = parseInt(el.dataset.orderId);
-                        
-                        if (target === pendienteColumn) {
-                            cambiarEstadoOrden(orderId, 'pendiente');
-                        } else if (target === preparacionColumn) {
-                            cambiarEstadoOrden(orderId, 'preparacion');
-                        } else if (target === listoColumn) {
-                            cambiarEstadoOrden(orderId, 'listo');
-                        }
-                    });
-                }
-            }
-            
-            // Datos iniciales de ejemplo (si no hay datos)
-            function loadSampleData() {
-                if (orders.length === 0) {
-                    orders = [
-                        {
-                            id: 1,
-                            mesa: 3,
-                            platos: [
-                                { nombre: "Hamburguesa Especial", cantidad: 2 },
-                                { nombre: "Papas fritas", cantidad: 1 }
-                            ],
-                            estado: "pendiente",
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            id: 2,
-                            mesa: 5,
-                            platos: [
-                                { nombre: "Pizza Margarita", cantidad: 1 },
-                                { nombre: "Ensalada César", cantidad: 1 },
-                                { nombre: "Refresco", cantidad: 2 }
-                            ],
-                            estado: "preparacion",
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            id: 3,
-                            mesa: 2,
-                            platos: [
-                                { nombre: "Pasta Carbonara", cantidad: 1 },
-                                { nombre: "Tiramisú", cantidad: 1 }
-                            ],
-                            estado: "listo",
-                            createdAt: new Date().toISOString()
-                        },
-                        {
-                            id: 4,
-                            mesa: 1,
-                            platos: [
-                                { nombre: "Sopa de tomate", cantidad: 1 },
-                                { nombre: "Pollo asado", cantidad: 1 },
-                                { nombre: "Agua mineral", cantidad: 1 }
-                            ],
-                            estado: "entregado",
-                            createdAt: new Date().toISOString()
-                        }
-                    ];
-                    
-                    saveOrders();
-                }
-            }
-            
-            // Cargar datos de ejemplo
-            loadSampleData();
-            
-            // Click fuera del modal para cerrarlo
-            window.addEventListener('click', function(event) {
-                if (event.target === nuevaOrdenModal) {
-                    nuevaOrdenModal.classList.add('hidden');
-                }
-            });
-        });
+        }
+
+        loadSampleData();
+        setupEventListeners();
+        attachActionHandlers();
+        updateDeleteButtons();
+        bindPlatoDelete();
+        resetPlatos();
+        applyRoleUi('mesero'); // placeholder for badge styles; dashboard is hidden
+        loadOrders();
+    });
     </script>
 </body>
 </html>
