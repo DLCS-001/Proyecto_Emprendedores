@@ -1,235 +1,3 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sistema de Pedidos - Restaurante (Completo)</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/dragula@3.7.3/dist/dragula.min.css" rel="stylesheet">
-    <style>
-        /* === ESTILOS COMPLETOS (igual que el prototipo original + dark mode) === */
-        :root {
-            --bg: #f8fafc;
-            --panel: rgba(255,255,255,.82);
-            --panel-border: rgba(148,163,184,.22);
-            --shadow: 0 20px 60px rgba(15,23,42,.08);
-            --text: #0f172a;
-            --card-bg: white;
-        }
-        body.dark {
-            --bg: #0f172a;
-            --panel: rgba(30,41,59,.85);
-            --panel-border: rgba(71,85,105,.5);
-            --shadow: 0 20px 60px rgba(0,0,0,.3);
-            --text: #e2e8f0;
-            --card-bg: #1e293b;
-        }
-        html, body { height: 100%; }
-        body {
-            font-family: 'Inter', system-ui, sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            transition: background 0.3s, color 0.2s;
-        }
-        .glass {
-            background: var(--panel);
-            backdrop-filter: blur(18px);
-            border: 1px solid var(--panel-border);
-            box-shadow: var(--shadow);
-        }
-        .role-card {
-            transition: transform .2s, box-shadow .2s;
-            border: 1px solid rgba(148,163,184,.25);
-            background: rgba(255,255,255,.78);
-        }
-        body.dark .role-card { background: rgba(30,41,59,.8); border-color: rgba(71,85,105,.5); }
-        .role-card:hover { transform: translateY(-4px); box-shadow: 0 18px 35px rgba(15,23,42,.12); border-color: rgba(59,130,246,.3); }
-        .role-card.active { outline: 2px solid rgba(59,130,246,.6); }
-        .board-column { min-height: 24rem; }
-        .order-card {
-            transition: transform .18s, box-shadow .18s;
-            background: var(--card-bg);
-        }
-        body.dark .order-card { background: #1e293b; border-color: #334155; }
-        .status-dot { width: 10px; height: 10px; border-radius: 999px; display: inline-block; }
-        .toast {
-            position: fixed;
-            bottom: 1.5rem;
-            right: 1.5rem;
-            z-index: 1100;
-            transform: translateX(120%);
-            transition: transform .28s;
-        }
-        .toast.show { transform: translateX(0); }
-        .toast-inner {
-            display: flex;
-            align-items: center;
-            gap: .6rem;
-            padding: .9rem 1rem;
-            border-radius: 1rem;
-            background: #1e293b;
-            color: white;
-            box-shadow: 0 15px 30px rgba(0,0,0,.3);
-        }
-        .dragula-placeholder {
-            background: rgba(59,130,246,.15);
-            border: 1px dashed rgba(59,130,246,.6);
-            border-radius: 1rem;
-        }
-        .gu-mirror {
-            position: fixed !important;
-            margin: 0 !important;
-            z-index: 9999 !important;
-            opacity: .9;
-            border-radius: 1rem;
-            transform: rotate(2deg);
-        }
-        .scrollbar-thin::-webkit-scrollbar { width: 8px; }
-        .scrollbar-thin::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 999px; }
-        .modal { background-color: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .time-badge {
-            font-size: 0.7rem;
-            background: #f1f5f9;
-            display: inline-block;
-            padding: 0.2rem 0.5rem;
-            border-radius: 999px;
-        }
-        body.dark .time-badge { background: #334155; }
-    </style>
-</head>
-<body>
-
-<!-- Pantalla de Login (igual al original con más estilo) -->
-<section id="login-screen" class="min-h-screen">
-    <div class="max-w-7xl mx-auto px-4 py-8 lg:py-12">
-        <div class="grid lg:grid-cols-2 gap-8 items-center min-h-[calc(100vh-4rem)]">
-            <div class="space-y-6">
-                <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/70 border border-slate-200 text-slate-600 text-sm shadow-sm">
-                    <i class="fa-solid fa-bolt text-blue-500"></i> Sistema de Pedidos - Versión Completa
-                </div>
-                <h1 class="text-4xl md:text-6xl font-extrabold">Gestión de Pedidos</h1>
-                <p class="text-lg opacity-80 max-w-xl">Edición, modo oscuro, exportación, drag & drop y más.</p>
-                <div class="grid sm:grid-cols-3 gap-3 max-w-2xl">
-                    <div class="glass rounded-2xl p-4"><i class="fa-solid fa-pen text-blue-500 text-2xl mb-2 block"></i><span class="font-semibold">Edición</span><div class="text-sm">Modifica órdenes pendientes</div></div>
-                    <div class="glass rounded-2xl p-4"><i class="fa-solid fa-moon text-indigo-500 text-2xl mb-2 block"></i><span class="font-semibold">Modo oscuro</span><div class="text-sm">Para jornadas largas</div></div>
-                    <div class="glass rounded-2xl p-4"><i class="fa-solid fa-download text-emerald-600 text-2xl mb-2 block"></i><span class="font-semibold">Exportar/Importar</span><div class="text-sm">Respaldos en JSON</div></div>
-                </div>
-            </div>
-            <div class="glass rounded-3xl p-5 md:p-8">
-                <h2 class="text-2xl font-bold mb-4">Selecciona tu rol</h2>
-                <div class="grid gap-4">
-                    <button class="role-card text-left rounded-2xl p-5" data-role="mesero">
-                        <div class="flex items-center gap-4"><div class="w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-bell-concierge"></i></div><div><h3 class="text-lg font-semibold">Mesero</h3><p class="text-sm opacity-70">Crear / editar / cancelar</p></div></div>
-                    </button>
-                    <button class="role-card text-left rounded-2xl p-5" data-role="chef">
-                        <div class="flex items-center gap-4"><div class="w-14 h-14 rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-kitchen-set"></i></div><div><h3 class="text-lg font-semibold">Chef</h3><p class="text-sm opacity-70">Arrastrar entre estados</p></div></div>
-                    </button>
-                    <button class="role-card text-left rounded-2xl p-5" data-role="servicio">
-                        <div class="flex items-center gap-4"><div class="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-2xl"><i class="fa-solid fa-cash-register"></i></div><div><h3 class="text-lg font-semibold">Servicio</h3><p class="text-sm opacity-70">Entregar pedidos listos</p></div></div>
-                    </button>
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- Dashboard (con menú responsive, doble búsqueda, filtro por mesa, etc.) -->
-<section id="dashboard-screen" class="hidden min-h-screen flex flex-col">
-    <header class="sticky top-0 z-40 border-b border-white/60 glass">
-        <div class="max-w-7xl mx-auto px-4 py-3">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center"><i class="fa-solid fa-utensils"></i></div>
-                    <h1 class="text-lg font-bold">Sistema de Pedidos</h1>
-                </div>
-                <!-- Botones escritorio -->
-                <div class="hidden md:flex items-center gap-2">
-                    <span id="role-badge" class="px-3 py-1.5 rounded-full text-sm font-medium"></span>
-                    <button id="darkModeToggle" class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-700"><i class="fa-solid fa-moon"></i></button>
-                    <button id="reload-history" class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-700"><i class="fa-solid fa-rotate"></i> Recargar</button>
-                    <button id="exportBtn" class="px-3 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-800"><i class="fa-solid fa-download"></i> Exportar</button>
-                    <button id="importBtn" class="px-3 py-2 rounded-xl bg-amber-100 dark:bg-amber-800"><i class="fa-solid fa-upload"></i> Importar</button>
-                    <button id="logout-button" class="px-3 py-2 rounded-xl bg-slate-800 text-white"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
-                </div>
-                <button id="mobile-menu-button" class="md:hidden w-10 h-10 rounded-xl bg-slate-200 dark:bg-slate-700"><i class="fa-solid fa-bars"></i></button>
-            </div>
-            <!-- Barra de búsqueda y filtros (escritorio) -->
-            <div class="hidden md:flex gap-3 mt-3">
-                <input id="search-input" type="search" placeholder="Buscar por mesa, plato o ID" class="px-4 py-2 rounded-xl border dark:bg-slate-800 flex-1">
-                <select id="mesa-filter" class="px-4 py-2 rounded-xl border dark:bg-slate-800">
-                    <option value="">Todas las mesas</option>
-                </select>
-            </div>
-            <!-- Menú móvil (collapsible) -->
-            <div id="mobile-menu" class="hidden md:hidden mt-4 glass rounded-2xl p-4 space-y-3">
-                <span id="role-badge-mobile" class="inline-block px-3 py-1.5 rounded-full text-sm font-medium"></span>
-                <input id="search-input-mobile" type="search" placeholder="Buscar..." class="w-full px-4 py-2 rounded-xl border dark:bg-slate-800">
-                <select id="mesa-filter-mobile" class="w-full px-4 py-2 rounded-xl border dark:bg-slate-800">
-                    <option value="">Todas las mesas</option>
-                </select>
-                <div class="grid grid-cols-2 gap-2">
-                    <button id="reload-history-mobile" class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-700"><i class="fa-solid fa-rotate"></i> Recargar</button>
-                    <button id="darkModeToggleMobile" class="px-3 py-2 rounded-xl bg-slate-200 dark:bg-slate-700"><i class="fa-solid fa-moon"></i> Oscuro</button>
-                    <button id="exportBtnMobile" class="px-3 py-2 rounded-xl bg-emerald-100 dark:bg-emerald-800"><i class="fa-solid fa-download"></i> Exportar</button>
-                    <button id="importBtnMobile" class="px-3 py-2 rounded-xl bg-amber-100 dark:bg-amber-800"><i class="fa-solid fa-upload"></i> Importar</button>
-                    <button id="logout-button-mobile" class="col-span-2 px-3 py-2 rounded-xl bg-slate-800 text-white"><i class="fa-solid fa-right-from-bracket"></i> Salir</button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <main class="flex-1 max-w-7xl mx-auto w-full px-4 py-6">
-        <div class="flex justify-between items-center mb-4 flex-wrap gap-2">
-            <div><h2 class="text-2xl font-bold">Tablero operativo</h2><p class="text-sm opacity-70">Seguimiento por estado con acciones según rol.</p></div>
-            <div id="mesero-controls" class="hidden"><button id="nueva-orden-btn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl shadow-lg"><i class="fa-solid fa-plus"></i> Nueva orden</button></div>
-        </div>
-
-        <!-- Tarjetas de resumen -->
-        <div class="grid sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
-            <div class="glass rounded-2xl p-4"><div class="flex justify-between"><span>Pendientes</span><i class="fa-regular fa-clock text-amber-500"></i></div><p id="count-pendiente" class="text-3xl font-bold">0</p></div>
-            <div class="glass rounded-2xl p-4"><div class="flex justify-between"><span>En preparación</span><i class="fa-solid fa-fire text-orange-500"></i></div><p id="count-preparacion" class="text-3xl font-bold">0</p></div>
-            <div class="glass rounded-2xl p-4"><div class="flex justify-between"><span>Listas</span><i class="fa-solid fa-check text-emerald-500"></i></div><p id="count-listo" class="text-3xl font-bold">0</p></div>
-            <div class="glass rounded-2xl p-4"><div class="flex justify-between"><span>Entregadas</span><i class="fa-solid fa-bell-concierge text-sky-500"></i></div><p id="count-entregado" class="text-3xl font-bold">0</p></div>
-        </div>
-
-        <!-- Columnas Kanban -->
-        <div class="grid gap-5 xl:grid-cols-4">
-            <div class="glass rounded-3xl"><div class="px-4 py-3 bg-amber-50 dark:bg-amber-900/30 border-b flex justify-between"><span>📋 Pendiente</span><span id="badge-pendiente">0</span></div><div id="pendiente-column" class="board-column p-4 space-y-3"></div></div>
-            <div class="glass rounded-3xl"><div class="px-4 py-3 bg-orange-50 dark:bg-orange-900/30 border-b flex justify-between"><span>🔥 En preparación</span><span id="badge-preparacion">0</span></div><div id="preparacion-column" class="board-column p-4 space-y-3"></div></div>
-            <div class="glass rounded-3xl"><div class="px-4 py-3 bg-emerald-50 dark:bg-emerald-900/30 border-b flex justify-between"><span>✅ Listo para servir</span><span id="badge-listo">0</span></div><div id="listo-column" class="board-column p-4 space-y-3"></div></div>
-            <div class="glass rounded-3xl"><div class="px-4 py-3 bg-sky-50 dark:bg-sky-900/30 border-b flex justify-between"><span>🍽️ Entregadas</span><span id="badge-entregado">0</span></div><div id="entregado-column" class="board-column p-4 space-y-3"></div></div>
-        </div>
-    </main>
-</section>
-
-<!-- Modal Nueva/Editar Orden (completo) -->
-<div id="orden-modal" class="modal fixed inset-0 hidden items-center justify-center z-50 px-4">
-    <div class="glass w-full max-w-2xl rounded-3xl overflow-hidden max-h-[92vh] flex flex-col">
-        <div class="flex justify-between px-6 py-4 border-b"><h3 class="text-xl font-bold" id="modal-title">Nueva orden</h3><button id="cerrar-modal" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-700"><i class="fa-solid fa-xmark"></i></button></div>
-        <form id="orden-form" class="p-6 overflow-auto">
-            <input type="hidden" id="edit-order-id">
-            <div class="grid md:grid-cols-2 gap-4 mb-4">
-                <div><label class="block text-sm font-medium">Número de mesa</label><input id="mesa" type="number" min="1" required class="w-full px-4 py-2 rounded-xl border dark:bg-slate-800"></div>
-                <div><label class="block text-sm font-medium">Notas (opcional)</label><input id="notas" type="text" placeholder="Ej: sin cebolla, extra salsa" class="w-full px-4 py-2 rounded-xl border dark:bg-slate-800"></div>
-            </div>
-            <div><label class="block text-sm font-medium">Platos</label><button type="button" id="agregar-plato" class="text-blue-600 text-sm ml-2"><i class="fa-solid fa-plus"></i> Agregar plato</button>
-                <div id="platos-container" class="space-y-3 mt-2"></div>
-            </div>
-            <div class="mt-6 flex justify-end gap-3"><button type="button" id="cancelar-orden" class="px-4 py-2 rounded-xl bg-slate-200 dark:bg-slate-700">Cancelar</button><button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 text-white">Guardar orden</button></div>
-        </form>
-    </div>
-</div>
-
-<!-- Toast y sonido -->
-<div id="notification" class="toast"><div class="toast-inner"><i class="fa-solid fa-circle-check text-emerald-400"></i><span id="notification-text"></span></div></div>
-<audio id="notification-sound" src="https://assets.mixkit.co/active_storage/sfx/933/933-preview.mp3" preload="auto"></audio>
-
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.20/dist/sweetalert2.all.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/dragula@3.7.3/dist/dragula.min.js"></script>
-<script>
 (function(){
     const STORAGE_KEY = 'restaurantOrders';
     const STATE_ORDER = ['pendiente', 'preparacion', 'listo', 'entregado'];
@@ -237,7 +5,7 @@
     let orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     let drake = null;
 
-    // Elementos
+    // Elementos (todos los originales + nuevos)
     const loginScreen = document.getElementById('login-screen');
     const dashboardScreen = document.getElementById('dashboard-screen');
     const roleBadge = document.getElementById('role-badge');
@@ -262,7 +30,7 @@
     const totals = {};
     STATE_ORDER.forEach(s => { badges[s] = document.getElementById(`badge-${s}`); totals[s] = document.getElementById(`count-${s}`); });
 
-    // Helpers
+    // Funciones auxiliares (originales + mejoras)
     function saveOrders(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(orders)); }
     function showToast(msg){ const nt = document.getElementById('notification-text'); if(nt) nt.textContent = msg; const toast = document.getElementById('notification'); toast.classList.add('show'); setTimeout(()=>toast.classList.remove('show'),2500); }
     function playSound(){ try{ document.getElementById('notification-sound').play(); }catch(e){} }
@@ -280,6 +48,8 @@
         mesaFilterMobile.innerHTML = options;
     }
 
+    // Renderizado de tarjeta (con botón Editar si corresponde)
+    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;}); }
     function renderOrderCard(order){
         const meta = { pendiente:{label:'Pendiente',dot:'bg-amber-500',cls:'bg-amber-100 text-amber-800'}, preparacion:{label:'En preparación',dot:'bg-orange-500',cls:'bg-orange-100 text-orange-800'}, listo:{label:'Listo',dot:'bg-emerald-500',cls:'bg-emerald-100 text-emerald-800'}, entregado:{label:'Entregado',dot:'bg-sky-500',cls:'bg-sky-100 text-sky-800'} }[order.estado];
         const canDrag = cardAllowsAction(order);
@@ -303,7 +73,6 @@
                 </div>
             </article>`;
     }
-    function escapeHtml(str){ if(!str) return ''; return str.replace(/[&<>]/g, function(m){ if(m === '&') return '&amp;'; if(m === '<') return '&lt;'; if(m === '>') return '&gt;'; return m;}); }
 
     function renderColumns(){
         const list = filteredOrders();
@@ -321,6 +90,7 @@
         if(currentRole === 'chef') initDragAndDrop(); else destroyDragAndDrop();
     }
 
+    // Drag & drop (exactamente como en el original)
     function destroyDragAndDrop(){ if(drake){ drake.destroy(); drake = null; } }
     function initDragAndDrop(){
         destroyDragAndDrop();
@@ -356,7 +126,7 @@
         });
     }
 
-    // Modal de orden (nueva/editar)
+    // Modal de orden (nueva y edición)
     function openModal(orden=null){
         const modal = document.getElementById('orden-modal');
         document.getElementById('orden-form').reset();
@@ -413,6 +183,7 @@
         closeModal();
     }
 
+    // Exportar/Importar
     function exportData(){
         const dataStr = JSON.stringify(orders, null, 2);
         const blob = new Blob([dataStr], {type:'application/json'});
@@ -456,6 +227,7 @@
         renderColumns();
     }
 
+    // Event listeners (conserva todos los originales y añade los nuevos)
     function setEventListeners(){
         document.querySelectorAll('.role-card').forEach(card=>{
             card.addEventListener('click',()=>{
@@ -482,16 +254,20 @@
         document.getElementById('importBtn')?.addEventListener('click',importData);
         document.getElementById('exportBtnMobile')?.addEventListener('click',exportData);
         document.getElementById('importBtnMobile')?.addEventListener('click',importData);
+        // Sincronización de búsqueda (original)
         const syncSearch = (src, dst) => { if(src && dst) src.addEventListener('input',()=>{ dst.value = src.value; renderColumns(); }); };
         syncSearch(searchInput, searchInputMobile);
         syncSearch(searchInputMobile, searchInput);
+        // Sincronización de filtro por mesa
         const syncMesa = (src, dst) => { if(src && dst) src.addEventListener('change',()=>{ dst.value = src.value; renderColumns(); }); };
         syncMesa(mesaFilter, mesaFilterMobile);
         syncMesa(mesaFilterMobile, mesaFilter);
+        // Modo oscuro
         const toggleDark = ()=>{ document.body.classList.toggle('dark'); localStorage.setItem('darkMode', document.body.classList.contains('dark')); };
         darkToggle?.addEventListener('click',toggleDark);
         darkToggleMobile?.addEventListener('click',toggleDark);
         if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+        // Eventos de acciones (incluye "editar")
         document.addEventListener('click',(e)=>{
             const btn = e.target.closest('[data-action][data-order-id]');
             if(!btn) return;
@@ -503,6 +279,7 @@
             if(action === 'entregar') cambiarEstadoOrden(id,'entregado');
             if(action === 'editar'){ const orden = orders.find(o=>o.id === id); if(orden) openModal(orden); }
         });
+        // Menú móvil (original)
         document.getElementById('mobile-menu-button')?.addEventListener('click',()=>{ document.getElementById('mobile-menu').classList.toggle('hidden'); });
     }
 
@@ -520,9 +297,7 @@
 
     loadSampleData();
     setEventListeners();
-    addPlatoRow();
+    addPlatoRow(); // fila por defecto en el modal
     updateDeleteButtons();
+    // Inicializar UI (dashboard oculto)
 })();
-</script>
-</body>
-</html>
