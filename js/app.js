@@ -3,6 +3,7 @@
     const STORAGE_KEY = 'restaurantOrders';
     const STATE_ORDER = ['pendiente', 'preparacion', 'listo', 'entregado'];
     let currentRole = '';
+    let currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
     let orders = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
     let drake = null;
     let charts = {};
@@ -92,7 +93,8 @@
     }
     
     function visibleStates() { 
-        if (currentRole === 'chef') return ['pendiente', 'preparacion', 'listo'];
+        if (currentRole === 'mesero') return ['pendiente', 'preparacion'];
+        if (currentRole === 'chef') return ['preparacion', 'listo', 'entregado'];
         if (currentRole === 'servicio') return ['listo', 'entregado'];
         return STATE_ORDER;
     }
@@ -114,6 +116,38 @@
         const q = (searchInput.value || searchInputMobile.value || '').trim().toLowerCase(); 
         const mesa = mesaFilter.value || mesaFilterMobile.value || ''; 
         return orders.filter(o => matchesSearch(o, q) && (mesa === '' || o.mesa == mesa)); 
+    }
+
+    function getRoleLabel(role) {
+        return { mesero: 'Mesero', chef: 'Chef', servicio: 'Servicio al cliente' }[role] || role;
+    }
+
+    async function loginRole(role) {
+        const label = getRoleLabel(role);
+        const result = await Swal.fire({
+            title: `Iniciar sesión - ${label}`,
+            html: `
+                <input id="login-user" class="swal2-input" placeholder="Usuario">
+                <input id="login-password" type="password" class="swal2-input" placeholder="Contraseña">
+            `,
+            focusConfirm: false,
+            showCancelButton: true,
+            confirmButtonText: 'Entrar',
+            cancelButtonText: 'Cancelar',
+            preConfirm: () => {
+                const usuario = document.getElementById('login-user').value.trim();
+                const password = document.getElementById('login-password').value.trim();
+                if (!usuario || !password) {
+                    Swal.showValidationMessage('Ingresa usuario y contraseña');
+                    return false;
+                }
+                return { usuario, role };
+            }
+        });
+
+        if (!result.isConfirmed) return null;
+        localStorage.setItem('currentUser', JSON.stringify(result.value));
+        return result.value;
     }
 
     function updateMesaFilter() {
@@ -151,6 +185,12 @@
             </li>
         `).join('');
         const tiempoEst = calcularTiempoEstimado(order.platos);
+        const rating = order.valoracion ? `
+            <div class="mt-2 text-xs rating-summary">
+                ${'★'.repeat(order.valoracion.estrellas)}${'☆'.repeat(5 - order.valoracion.estrellas)}
+                <span>${escapeHtml(order.valoracion.mensaje)}</span>
+            </div>
+        ` : '';
         
         return `
             <article class="order-card p-4 shadow-sm ${canDrag ? 'cursor-grab' : ''}" data-order-id="${order.id}">
@@ -167,6 +207,7 @@
                     </span>
                 </div>
                 ${order.notas ? `<div class="mt-2 text-xs bg-yellow-50 dark:bg-yellow-900/30 p-1 rounded"><i class="fa-regular fa-note-sticky"></i> ${escapeHtml(order.notas)}</div>` : ''}
+                ${rating}
                 <div class="my-2 border-t"></div>
                 <ul class="text-sm space-y-1">${dishes}</ul>
                 <div class="mt-2 flex justify-between items-center">
@@ -192,6 +233,9 @@
             if (badges[st]) badges[st].innerText = count;
         }
         const visible = visibleStates();
+        document.querySelectorAll('[data-board-state]').forEach(column => {
+            column.classList.toggle('hidden', !visible.includes(column.dataset.boardState));
+        });
         for (let st of STATE_ORDER) {
             const filtered = list.filter(o => o.estado === st && visible.includes(st));
             const html = filtered.length 
@@ -247,6 +291,71 @@
         } else {
             showToast(`Orden #${orderId} movida a ${nuevoEstado}`);
         }
+    }
+
+    function mensajeValoracion(estrellas) {
+        if (estrellas >= 5) return 'Excelente servicio, gracias por tu valoración.';
+        if (estrellas === 4) return 'Muy buen servicio, seguiremos mejorando.';
+        if (estrellas === 3) return 'Gracias por tu opinión, tomaremos nota.';
+        if (estrellas === 2) return 'Lamentamos que no fuera ideal, revisaremos el servicio.';
+        return 'Gracias por avisarnos, buscaremos mejorar tu experiencia.';
+    }
+
+    async function confirmarEntrega(orderId) {
+        const result = await Swal.fire({
+            title: `Entregar orden #${orderId}`,
+            html: `
+                <p class="text-sm mb-3">Agrega una valoración del servicio.</p>
+                <div class="rating-stars" id="rating-stars">
+                    ${[1, 2, 3, 4, 5].map(n => `<button type="button" data-rating="${n}" class="rating-star">★</button>`).join('')}
+                </div>
+                <p id="rating-message" class="text-sm mt-3 opacity-80">Selecciona de 1 a 5 estrellas</p>
+            `,
+            showCancelButton: true,
+            confirmButtonText: 'Confirmar entrega',
+            cancelButtonText: 'Cancelar',
+            didOpen: () => {
+                let rating = 0;
+                const popup = Swal.getPopup();
+                popup.dataset.rating = '';
+                popup.querySelectorAll('.rating-star').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        rating = Number(btn.dataset.rating);
+                        popup.dataset.rating = rating;
+                        popup.querySelectorAll('.rating-star').forEach(star => {
+                            star.classList.toggle('selected', Number(star.dataset.rating) <= rating);
+                        });
+                        popup.querySelector('#rating-message').textContent = mensajeValoracion(rating);
+                    });
+                });
+            },
+            preConfirm: () => {
+                const rating = Number(Swal.getPopup().dataset.rating);
+                if (!rating) {
+                    Swal.showValidationMessage('Selecciona una valoración');
+                    return false;
+                }
+                return rating;
+            }
+        });
+
+        if (!result.isConfirmed) return;
+        const idx = orders.findIndex(o => o.id === orderId);
+        if (idx === -1) return;
+        orders[idx].valoracion = {
+            estrellas: result.value,
+            mensaje: mensajeValoracion(result.value),
+            usuario: currentUser?.usuario || 'Usuario',
+            fecha: new Date().toISOString()
+        };
+        cambiarEstadoOrden(orderId, 'entregado', true);
+        Swal.fire({
+            icon: 'success',
+            title: 'Entrega confirmada',
+            text: orders[idx].valoracion.mensaje,
+            timer: 1800,
+            showConfirmButton: false
+        });
     }
 
     function cancelarOrden(orderId) {
@@ -403,6 +512,7 @@
                 </div>
                 <div class="mt-2 text-sm">${order.platos.map(p => `${p.nombre} x${p.cantidad}`).join(', ')}</div>
                 ${order.notas ? `<div class="text-xs mt-1"><i class="fa-regular fa-note-sticky"></i> ${escapeHtml(order.notas)}</div>` : ''}
+                ${order.valoracion ? `<div class="text-xs mt-2 rating-summary">${'★'.repeat(order.valoracion.estrellas)}${'☆'.repeat(5 - order.valoracion.estrellas)} <span>${escapeHtml(order.valoracion.mensaje)}</span></div>` : ''}
             </div>
         `).join('');
         
@@ -551,9 +661,10 @@
     }
 
     function applyRoleUI(role) {
-        const label = { mesero: 'Mesero', chef: 'Chef', servicio: 'Servicio' }[role];
-        roleBadge.innerText = label;
-        if (roleBadgeMobile) roleBadgeMobile.innerText = label;
+        const label = getRoleLabel(role);
+        const userLabel = currentUser?.usuario ? `${label} - ${currentUser.usuario}` : label;
+        roleBadge.innerText = userLabel;
+        if (roleBadgeMobile) roleBadgeMobile.innerText = userLabel;
         document.getElementById('mesero-controls').style.display = role === 'mesero' ? 'block' : 'none';
         renderColumns();
         localStorage.setItem('lastRole', role);
@@ -563,8 +674,11 @@
     function setEventListeners() {
         // Selección de rol
         document.querySelectorAll('.role-card').forEach(card => {
-            card.addEventListener('click', () => {
-                currentRole = card.dataset.role;
+            card.addEventListener('click', async () => {
+                const login = await loginRole(card.dataset.role);
+                if (!login) return;
+                currentUser = login;
+                currentRole = login.role;
                 document.querySelectorAll('.role-card').forEach(c => c.classList.remove('active'));
                 card.classList.add('active');
                 loginScreen.classList.add('hidden');
@@ -576,7 +690,7 @@
         
         // Restaurar último rol
         const lastRole = localStorage.getItem('lastRole');
-        if (lastRole && ['mesero', 'chef', 'servicio'].includes(lastRole)) {
+        if (currentUser && lastRole && ['mesero', 'chef', 'servicio'].includes(lastRole)) {
             currentRole = lastRole;
             loginScreen.classList.add('hidden');
             dashboardScreen.classList.remove('hidden');
@@ -597,8 +711,10 @@
             dashboardScreen.classList.add('hidden');
             loginScreen.classList.remove('hidden');
             currentRole = '';
+            currentUser = null;
             destroyDragAndDrop();
             localStorage.removeItem('lastRole');
+            localStorage.removeItem('currentUser');
         };
         logoutBtn?.addEventListener('click', logout);
         logoutBtnMobile?.addEventListener('click', logout);
@@ -659,7 +775,7 @@
             if (action === 'cancelar') cancelarOrden(id);
             if (action === 'preparar') cambiarEstadoOrden(id, 'preparacion');
             if (action === 'listo') cambiarEstadoOrden(id, 'listo');
-            if (action === 'entregar') cambiarEstadoOrden(id, 'entregado');
+            if (action === 'entregar') confirmarEntrega(id);
             if (action === 'editar') {
                 const orden = orders.find(o => o.id === id);
                 if (orden) openModal(orden);

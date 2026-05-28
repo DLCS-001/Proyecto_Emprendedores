@@ -109,6 +109,34 @@ body.dark .role-card {
     border-radius: 999px;
 }
 
+.rating-stars {
+    display: flex;
+    justify-content: center;
+    gap: 0.35rem;
+}
+
+.rating-star {
+    color: #cbd5e1;
+    font-size: 2rem;
+    line-height: 1;
+    transition: color 0.18s ease, transform 0.18s ease;
+}
+
+.rating-star:hover,
+.rating-star.selected {
+    color: #f59e0b;
+    transform: scale(1.08);
+}
+
+.rating-summary {
+    color: #b45309;
+    font-weight: 600;
+}
+
+body.dark .rating-summary {
+    color: #fbbf24;
+}
+
 /* Estado dots */
 .status-dot {
     width: 10px;

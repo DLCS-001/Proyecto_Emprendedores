@@ -116,10 +116,10 @@
 
         <!-- Columnas Kanban -->
         <div class="grid gap-5 xl:grid-cols-4">
-            <div class="glass rounded-3xl"><div class="px-4 py-3 bg-amber-50 dark:bg-amber-900/30 border-b flex justify-between"><span>📋 Pendiente</span><span id="badge-pendiente">0</span></div><div id="pendiente-column" class="board-column p-4 space-y-3"></div></div>
-            <div class="glass rounded-3xl"><div class="px-4 py-3 bg-orange-50 dark:bg-orange-900/30 border-b flex justify-between"><span>🔥 En preparación</span><span id="badge-preparacion">0</span></div><div id="preparacion-column" class="board-column p-4 space-y-3"></div></div>
-            <div class="glass rounded-3xl"><div class="px-4 py-3 bg-emerald-50 dark:bg-emerald-900/30 border-b flex justify-between"><span>✅ Listo para servir</span><span id="badge-listo">0</span></div><div id="listo-column" class="board-column p-4 space-y-3"></div></div>
-            <div class="glass rounded-3xl"><div class="px-4 py-3 bg-sky-50 dark:bg-sky-900/30 border-b flex justify-between"><span>🍽️ Entregadas</span><span id="badge-entregado">0</span></div><div id="entregado-column" class="board-column p-4 space-y-3"></div></div>
+            <div class="glass rounded-3xl" data-board-state="pendiente"><div class="px-4 py-3 bg-amber-50 dark:bg-amber-900/30 border-b flex justify-between"><span>📋 Pendiente</span><span id="badge-pendiente">0</span></div><div id="pendiente-column" class="board-column p-4 space-y-3"></div></div>
+            <div class="glass rounded-3xl" data-board-state="preparacion"><div class="px-4 py-3 bg-orange-50 dark:bg-orange-900/30 border-b flex justify-between"><span>🔥 En preparación</span><span id="badge-preparacion">0</span></div><div id="preparacion-column" class="board-column p-4 space-y-3"></div></div>
+            <div class="glass rounded-3xl" data-board-state="listo"><div class="px-4 py-3 bg-emerald-50 dark:bg-emerald-900/30 border-b flex justify-between"><span>✅ Listo para servir</span><span id="badge-listo">0</span></div><div id="listo-column" class="board-column p-4 space-y-3"></div></div>
+            <div class="glass rounded-3xl" data-board-state="entregado"><div class="px-4 py-3 bg-sky-50 dark:bg-sky-900/30 border-b flex justify-between"><span>🍽️ Entregadas</span><span id="badge-entregado">0</span></div><div id="entregado-column" class="board-column p-4 space-y-3"></div></div>
         </div>
     </main>
 </section>
