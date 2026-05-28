@@ -173,6 +173,85 @@ button, input, select {
     transition: all 0.2s ease;
 }
 
+/* Botones del header sincronizados con el tema manual */
+body:not(.dark) #darkModeToggle,
+body:not(.dark) #darkModeToggleMobile,
+body:not(.dark) #reload-history,
+body:not(.dark) #reload-history-mobile,
+body:not(.dark) #mobile-menu-button {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
+body.dark #darkModeToggle,
+body.dark #darkModeToggleMobile,
+body.dark #reload-history,
+body.dark #reload-history-mobile,
+body.dark #mobile-menu-button {
+    background-color: #334155 !important;
+    color: #f8fafc !important;
+}
+
+body:not(.dark) #history-btn,
+body:not(.dark) #history-btn-mobile {
+    background-color: #e0e7ff !important;
+    color: #312e81 !important;
+}
+
+body.dark #history-btn,
+body.dark #history-btn-mobile {
+    background-color: #312e81 !important;
+    color: #eef2ff !important;
+}
+
+body:not(.dark) #stats-btn,
+body:not(.dark) #stats-btn-mobile {
+    background-color: #f3e8ff !important;
+    color: #581c87 !important;
+}
+
+body.dark #stats-btn,
+body.dark #stats-btn-mobile {
+    background-color: #581c87 !important;
+    color: #faf5ff !important;
+}
+
+body:not(.dark) #exportBtn,
+body:not(.dark) #exportBtnMobile {
+    background-color: #d1fae5 !important;
+    color: #065f46 !important;
+}
+
+body.dark #exportBtn,
+body.dark #exportBtnMobile {
+    background-color: #065f46 !important;
+    color: #ecfdf5 !important;
+}
+
+body:not(.dark) #importBtn,
+body:not(.dark) #importBtnMobile {
+    background-color: #fef3c7 !important;
+    color: #92400e !important;
+}
+
+body.dark #importBtn,
+body.dark #importBtnMobile {
+    background-color: #92400e !important;
+    color: #fffbeb !important;
+}
+
+body:not(.dark) #logout-button,
+body:not(.dark) #logout-button-mobile {
+    background-color: #0f172a !important;
+    color: #ffffff !important;
+}
+
+body.dark #logout-button,
+body.dark #logout-button-mobile {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+}
+
 /* Colores de acento en botones */
 .bg-blue-600 { background-color: var(--accent-blue); }
 .hover\:bg-blue-700:hover { filter: brightness(0.9); background-color: var(--accent-blue); }

@@ -636,15 +636,19 @@
         
         // Modo oscuro (con actualización de gráficos)
         const toggleDark = () => {
-            document.body.classList.toggle('dark');
-            localStorage.setItem('darkMode', document.body.classList.contains('dark'));
+            const isDark = document.body.classList.toggle('dark');
+            document.documentElement.classList.toggle('dark', isDark);
+            localStorage.setItem('darkMode', isDark);
             if (document.getElementById('stats-modal').classList.contains('flex')) {
                 actualizarEstadisticas(true);
             }
         };
         darkToggle?.addEventListener('click', toggleDark);
         darkToggleMobile?.addEventListener('click', toggleDark);
-        if (localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark');
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark');
+            document.documentElement.classList.add('dark');
+        }
         
         // Acciones de botones en tarjetas (cancelar, preparar, listo, entregar, editar)
         document.addEventListener('click', (e) => {
